@@ -1,31 +1,20 @@
-document.getElementById('analyzeBtn').addEventListener('click', async () => {
-    const message = document.getElementById('messageInput').value.trim();
-    const outputElem = document.getElementById('outputResult');
+// Example of your frontend fetching from your FastAPI backend
+document.getElementById("submitBtn").addEventListener("click", async () => {
+    const userMessage = document.getElementById("messageInput").value;
+    const outputElem = document.getElementById("output");
 
-    if (!message) {
-        alert('Please enter a message first.');
-        return;
-    }
+    const response = await fetch("http://127.0.0.1:8000/api/respond", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+        message: userMessage,
+        summary: "Web frontend user inquiry",
+        priority: "medium"
+    })
+});
 
-    outputElem.textContent = 'Processing through ingestion firewall...';
-
-    try {
-        const response = await fetch('http://127.0.0.1:8000/api/analyze', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || 'Validation or Server Error');
-        }
-
-        outputElem.textContent = JSON.stringify(data, null, 2);
-    } catch (error) {
-        outputElem.textContent = `[ERROR] ${error.message}`;
-    }
+    const data = await response.json();
+    
+    // This line renders the Markdown response cleanly on your webpage!
+    outputElem.innerHTML = marked.parse(data.response);
 });

@@ -1,31 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Structured Ingestion Firewall</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Enterprise Ingestion Firewall</h1>
-            <p>Secure LLM-powered support message classification & Pydantic validation</p>
-        </header>
-
-        <main>
-            <div class="card">
-                <label for="messageInput">Customer Support Message:</label>
-                <textarea id="messageInput" rows="4" placeholder="Enter customer message here (e.g., Where is my order #12345?)"></textarea>
-                <button id="analyzeBtn">Analyze & Validate</button>
-            </div>
-
-            <div class="card result-card">
-                <h2>Firewall Output / Classification</h2>
-                <pre id="outputResult">Waiting for input...</pre>
-            </div>
-        </main>
-    </div>
-    <script src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enterprise Ingestion Firewall</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
