@@ -1,7 +1,7 @@
-
+import os
 from dotenv import load_dotenv
 
-# Load environment variables first
+# Load environment variables
 load_dotenv()
 
 from fastapi import FastAPI
@@ -13,11 +13,24 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Allowed frontend URLs
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000"
+]
+
+# Production frontend URL
+frontend_url = os.getenv("FRONTEND_URL")
+
+if frontend_url:
+    origins.append(frontend_url.rstrip("/"))
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -34,3 +47,8 @@ async def root():
     return {
         "message": "Enterprise Ingestion Firewall API is running"
     }
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
