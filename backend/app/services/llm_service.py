@@ -1,31 +1,33 @@
-import instructor
+import os
+from pathlib import Path
 from groq import Groq
-from backend.app.config import settings
-from backend.app.schemas.ingestion import IngestionResult, TokenMetadata
-from backend.app.utils.token_counter import estimate_tokens
+from dotenv import load_dotenv
 
-def analyze_message(message: str) -> IngestionResult:
-    client = instructor.from_groq(Groq(api_key=settings.GROQ_API_KEY))
+env_path = Path(__file__).resolve().parents[2] / ".env"
 
-    prompt = f"""
-    Analyze the following customer support message and classify it according to the schema.
-    Message: "{message}"
-    """
+load_dotenv(env_path, override=True)
 
-    result: IngestionResult = client.chat.completions.create(
-        model=settings.GROQ_MODEL,
-        response_model=IngestionResult,
-        messages=[
-            {"role": "system", "content": "You are an enterprise support request classifier and ingestion firewall."},
-            {"role": "user", "content": prompt}
-        ],
-        max_retries=2
-    )
+api_key = os.getenv("GROQ_API_KEY")
+model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
-    input_tokens = estimate_tokens(message)
-    result.token_metadata = TokenMetadata(
-        estimated_input_tokens=input_tokens,
-        note="Estimated locally; may differ from provider token counts."
-    )
+if not api_key:
+    raise ValueError("GROQ_API_KEY is missing")
 
-    return result
+client = Groq(api_key=api_key)
+
+print("Groq Model:", model)
+
+
+def generate_llm_response(messages: list) -> str:
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.7,
+            max_completion_tokens=1024
+        )
+
+        return completion.choices[0].message.content or ""
+
+    except Exception as e:
+        raise RuntimeError(f"LLM Error: {str(e)}")

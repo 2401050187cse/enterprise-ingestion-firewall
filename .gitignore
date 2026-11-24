@@ -1,13 +1,37 @@
-# Python / Virtual Environment
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Python virtual environments
 .venv/
+venv/
+env/
+
+# Python cache
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
 .pytest_cache/
 
-# Environment variables & Secrets
-.env
+# Node.js dependencies
+node_modules/
 
-# OS specific
+# Frontend build files
+dist/
+build/
+.vite/
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Operating system files
 .DS_Store
 Thumbs.db
+
+# Deployment files
+.vercel/

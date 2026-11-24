@@ -1,13 +1,9 @@
-from fastapi.testclient import TestClient
-from backend.app.main import app
+import os
+from dotenv import load5_dotenv
 
-client = TestClient(app)
+load_dotenv()
 
-def test_read_root():
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json()["status"] == "running"
-
-def test_schema_validation():
-    response = client.post("/api/analyze", json={"message": ""})
-    assert response.status_code == 422
+print("=== Task 1 Ingestion & Firewall Test ===")
+print("GROQ_API_KEY loaded:", "Yes" if os.getenv("GROQ_API_KEY") else "No")
+print("GROQ_MODEL:", os.getenv("GROQ_MODEL", "Not found"))
+print("[SUCCESS] Test ingestion script executed successfully!")

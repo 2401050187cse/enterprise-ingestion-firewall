@@ -1,14 +1,19 @@
-from fastapi import FastAPI, HTTPException
+
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.schemas.ingestion import IngestionRequest, IngestionResult
-from backend.app.services.llm_service import analyze_message
+from app.routers import respond
 
 app = FastAPI(
-    title="Enterprise Structured Ingestion Firewall",
-    description="Classifies customer support messages and validates output using Pydantic and Instructor.",
+    title="Enterprise Ingestion Firewall",
     version="1.0.0"
 )
 
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,14 +22,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-def read_root():
-    return {"status": "running", "service": "Enterprise Structured Ingestion Firewall"}
+# Register API routes
+app.include_router(
+    respond.router,
+    prefix="/api"
+)
 
-@app.post("/api/analyze", response_model=IngestionResult)
-def analyze_endpoint(payload: IngestionRequest):
-    try:
-        result = analyze_message(payload.message)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Enterprise Ingestion Firewall API is running"
+    }
