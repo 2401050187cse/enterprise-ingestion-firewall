@@ -3,6 +3,10 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+const API_URL = (
+  import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000'
+).replace(/\/+$/, '');
+
 function App() {
   const [sessionId, setSessionId] = useState('');
   const [messages, setMessages] = useState([]);
@@ -12,8 +16,11 @@ function App() {
   useEffect(() => {
     let storedSession = localStorage.getItem('session_id');
 
-    if (!storedSession) {
-      storedSession = 'session_' + crypto.randomUUID();
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!storedSession || !uuidPattern.test(storedSession)) {
+      storedSession = crypto.randomUUID();
       localStorage.setItem('session_id', storedSession);
     }
 
@@ -35,12 +42,15 @@ function App() {
 
     try {
       const res = await axios.post(
-        'http://127.0.0.1:8000/api/respond',
+        `${API_URL}/api/analyze`,
         {
-          message: currentInput,
-          summary: 'General Query',
-          priority: 'Medium',
-          session_id: sessionId
+          incognito: false,
+          history: [],
+          session_id: sessionId,
+          message: currentInput
+        },
+        {
+          timeout: 120000
         }
       );
 
@@ -48,46 +58,44 @@ function App() {
         ...prev,
         {
           role: 'assistant',
-          content: res.data.response
+          content:
+            res.data.response_markdown ||
+            'No response received.'
         }
       ]);
 
     } catch (err) {
+      console.error('API Error:', err);
+
+      const detail = err.response?.data?.detail;
+
+      const errorMessage =
+        typeof detail === 'string'
+          ? detail
+          : err.message;
+
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: '⚠️ Error: ' + err.message
+          content: '⚠️ Error: ' + errorMessage
         }
       ]);
+
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNewChat = async () => {
+  const handleNewChat = () => {
     if (loading) return;
 
-    setLoading(true);
+    const newSession = crypto.randomUUID();
 
-    try {
-      if (sessionId) {
-        await axios.post(
-          'http://127.0.0.1:8000/api/clear',
-          { session_id: sessionId }
-        );
-      }
-    } catch (err) {
-      console.warn('Unable to clear old session:', err);
-    } finally {
-      const newSession = 'session_' + crypto.randomUUID();
-
-      localStorage.setItem('session_id', newSession);
-      setSessionId(newSession);
-      setMessages([]);
-      setInput('');
-      setLoading(false);
-    }
+    localStorage.setItem('session_id', newSession);
+    setSessionId(newSession);
+    setMessages([]);
+    setInput('');
   };
 
   return (
@@ -142,7 +150,9 @@ function App() {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <h2>Enterprise Ingestion Firewall — Week 3 Chat</h2>
+        <h2>
+          Enterprise Ingestion Firewall — Week 4 Chat
+        </h2>
 
         <button
           onClick={handleNewChat}
@@ -177,7 +187,9 @@ function App() {
           <div
             key={i}
             style={{
-              textAlign: m.role === 'user' ? 'right' : 'left',
+              textAlign: m.role === 'user'
+                ? 'right'
+                : 'left',
               margin: '10px 0'
             }}
           >
@@ -197,7 +209,9 @@ function App() {
 
               {m.role === 'assistant' ? (
                 <div className="markdown-content">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                  >
                     {m.content}
                   </ReactMarkdown>
                 </div>
@@ -240,7 +254,8 @@ function App() {
             backgroundColor: '#007bff',
             color: '#fff',
             border: 'none',
-            borderRadius: '4px'
+            borderRadius: '4px',
+            cursor: 'pointer'
           }}
         >
           {loading ? 'Wait...' : 'Send'}
