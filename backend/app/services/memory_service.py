@@ -1,17 +1,28 @@
 ﻿from typing import List, Dict
+from app.services.database_service import supabase
 
-session_db: Dict[str, List[Dict[str, str]]] = {}
 
 def get_history(session_id: str) -> List[Dict[str, str]]:
-    if session_id not in session_db:
-        session_db[session_id] = []
-    return session_db[session_id]
+    result = (
+        supabase.table("chat_history")
+        .select("role, content")
+        .eq("session_id", session_id)
+        .order("id")
+        .execute()
+    )
+
+    return result.data or []
+
 
 def add_message(session_id: str, role: str, content: str):
-    if session_id not in session_db:
-        session_db[session_id] = []
-    session_db[session_id].append({"role": role, "content": content})
+    supabase.table("chat_history").insert({
+        "session_id": session_id,
+        "role": role,
+        "content": content
+    }).execute()
+
 
 def clear_session(session_id: str):
-    if session_id in session_db:
-        session_db[session_id] = []
+    supabase.table("chat_history").delete().eq(
+        "session_id", session_id
+    ).execute()
